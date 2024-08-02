@@ -71,16 +71,18 @@ const switchOperation = () => {
 
 const addDigit = e => {
     e.preventDefault();
-    if(e.target.value === "dot") {
-        if(!isFloat) {
-            mainResultArr.push(".");
-            isFloat = true;
+    if(mainResultArr.length < 14) {
+        if(e.target.value === "dot") {
+            if(!isFloat) {
+                mainResultArr.push(".");
+                isFloat = true;
+            }
+        } else {
+            mainResultArr.push(e.target.value);
+            isNumberPressed = true;
         }
-    } else {
-        mainResultArr.push(e.target.value);
-        isNumberPressed = true;
+        mainResultElement.textContent = mainResultArr.join("");
     }
-    mainResultElement.textContent = mainResultArr.join("");
 }
 
 const applyOperator = e => {
@@ -95,7 +97,7 @@ const applyOperator = e => {
         if(lastOperation) {
             switchOperation();
             reset(true);
-            mainResultElement.textContent = calculation;
+            mainResultElement.textContent = +`${calculation}`.split("").slice(0,13).join(""); // this limits the result length to 13 digits
             calculation = 0;
         }
 
@@ -118,7 +120,6 @@ const applyOperator = e => {
                 reset();
             }
         }
-        
     }
 }
 
@@ -132,4 +133,78 @@ buttonsArr.forEach(e => {
     }
 });
 
+
+
+// Keyboard 
+// Variables
+
+keyboardDigitsObj = {
+    "1":"1", "2":"2", "3":"3", "4":"4", "5":"5", "6":"6", "7":"7", "8":"8", "9":"9", "0":"0", ".":"." 
+}
+
+keyboardOperationObj = {
+    "Enter":"equal", "Backspace":"clear", "+":"sum", "-":"subtract", "*":"multiply", "/":"divide", "%":"percent"
+}
+
+const addDigitByKeypress = e => {
+    if(mainResultArr.length < 14) {
+        if(e === ".") {
+            if(!isFloat) {
+                mainResultArr.push(".");
+                isFloat = true;
+            }
+        } else {
+            mainResultArr.push(e);
+            isNumberPressed = true;
+        }
+        mainResultElement.textContent = mainResultArr.join("");
+    }
+}
+
+const applyOperatorByKeypress = (e, symbol) => {
+    mainResultNum = +mainResultArr.join("");
+    if(e === "clear") { // CLEAR
+        calculation = 0;
+        reset(true);
+
+    } else if(e === "equal") { // EQUAL
+        if(mainResultArr.join("") !== "." && mainResultArr.join("") !== "-" && mainResultArr.join("") !== "-.") // this check that the number is not an empty dot (.), comma (.) or comma and dot (-.)
+        if(lastOperation) {
+            switchOperation();
+            reset(true);
+            mainResultElement.textContent = +`${calculation}`.split("").slice(0,13).join(""); // this limits the result length to 13 digits
+            calculation = 0;
+        }
+
+    } else {
+        if(!mainResultArr.length && e === "subtract") { // this part allows to use negative numbers
+            mainResultArr.push("-");
+            mainResultElement.textContent = "-";
+        }
+        if(isNumberPressed) { 
+            secondaryResultOperatorElement.textContent = symbol;
+            if(lastOperation) {
+                switchOperation();
+                lastOperation = operationObj[e];
+                secondaryResultValueElement.textContent = calculation;
+                reset();
+            } else {
+                lastOperation = operationObj[e];
+                secondaryResultValueElement.textContent = mainResultNum;
+                calculation = mainResultNum;
+                reset();
+            }
+        }
+    }
+}
+
+// Event Listener
+
+window.addEventListener("keydown", e => {
+    if(keyboardDigitsObj[e.key] !== undefined) addDigitByKeypress(keyboardDigitsObj[e.key]);     
+    if(keyboardOperationObj[e.key] !== undefined) applyOperatorByKeypress(keyboardOperationObj[e.key], e.key);
+    }
+);
+
 // known issues
+// 0.3 - 0.2
